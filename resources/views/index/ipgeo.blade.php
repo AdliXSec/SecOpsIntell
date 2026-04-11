@@ -413,7 +413,7 @@
                 <div class="studio-card p-1.5 rounded-2xl w-full md:w-96 shadow-2xl">
                     <form action="{{ route('cvepost') }}" method="POST" class="flex gap-2">
                         @csrf
-                        <input type="text" name="cve_id" value="{{ $searched_cve ?? '' }}" placeholder="CVE-2019-1010218..."
+                        <input type="text" name="cve_id" value="{{ $searched_cve ?? '' }}" placeholder="ex: CVE-2019-1010218, low, medium, high"
                                class="flex-1 bg-transparent border-none text-sm text-white px-4 focus:ring-0">
                         <button type="submit" class="bg-white hover:bg-zinc-200 text-black p-2.5 rounded-xl transition shadow-lg">
                             <i data-lucide="database" class="w-4 h-4"></i>

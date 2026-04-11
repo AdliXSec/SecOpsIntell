@@ -19,7 +19,7 @@ class IPGeo extends Controller
         $api_key = env('GEOIP_API_KEY', '');
 
         $response = Http::timeout(30)
-            ->retry(3, 100)
+            ->retry(3, 500)
             ->withOptions([
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
             ])
@@ -45,7 +45,7 @@ class IPGeo extends Controller
         $api_key = env('VIRUSTOTAL_API_KEY', '');
 
         $submit_response = Http::timeout(30)
-            ->retry(3, 100)
+            ->retry(3, 500)
             ->withOptions([
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
             ])
@@ -68,7 +68,7 @@ class IPGeo extends Controller
         sleep(3);
 
         $analysis_response = Http::timeout(30)
-            ->retry(3, 100)
+            ->retry(3, 500)
             ->withOptions([
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
             ])
@@ -122,7 +122,7 @@ class IPGeo extends Controller
         }
 
         $response = Http::timeout(30)
-            ->retry(3, 100)
+            ->retry(3, 500)
             ->withOptions([
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
             ])
@@ -157,7 +157,7 @@ class IPGeo extends Controller
         $scan_api = env('VIRUSTOTAL_API_KEY', '');
         $geoip_key = env('GEOIP_API_KEY', '');
 
-        $ip_response = Http::timeout(30)->retry(3, 100)
+        $ip_response = Http::timeout(30)->retry(3, 500)
             ->withOptions(['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]])
             ->get('https://api.ipgeolocation.io/ipgeo', [
                 'apiKey' => $geoip_key,
@@ -167,7 +167,7 @@ class IPGeo extends Controller
         $endDate = Carbon::now()->setTimezone('UTC');
         $startDate = Carbon::now()->setTimezone('UTC')->subDays(7);
         $cve_response = Http::timeout(30)
-            ->retry(3, 100)
+            ->retry(3, 500)
             ->withOptions([
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
             ])
@@ -177,7 +177,7 @@ class IPGeo extends Controller
                 'resultsPerPage' => 50
             ]);
 
-        $submit_response = Http::timeout(30)->retry(3, 100)
+        $submit_response = Http::timeout(30)->retry(3, 500)
             ->withOptions(['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]])
             ->asForm()->withHeaders([
                     'x-apikey' => $scan_api,
@@ -193,7 +193,7 @@ class IPGeo extends Controller
             $analysis_id = $submit_response->json('data.id');
             sleep(3);
 
-            $analysis_response = Http::timeout(30)->retry(3, 100)
+            $analysis_response = Http::timeout(30)->retry(3, 500)
                 ->withOptions(['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]])
                 ->withHeaders([
                     'x-apikey' => $scan_api,

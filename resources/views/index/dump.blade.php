@@ -62,7 +62,7 @@
 
             <section>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold text-indigo-400">3. CVE Scan Result ({{ $scanned_url }})</h2>
+                    <h2 class="text-lg font-semibold text-indigo-400">3. CVE Scan Result (https://services.nvd.nist.gov/rest/json/cves/2.0)</h2>
                     @if($cve_result)
                         <span class="text-[10px] bg-green-900/30 text-green-400 px-2 py-1 rounded border border-green-800 uppercase">Success</span>
                     @else
