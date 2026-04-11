@@ -28,7 +28,7 @@
                         <span class="text-[10px] bg-red-900/30 text-red-400 px-2 py-1 rounded border border-red-800 uppercase">Failed</span>
                     @endif
                 </div>
-                
+
                 @if($ipgeo_result)
                     @dump($ipgeo_result)
                 @else
@@ -52,6 +52,26 @@
 
                 @if($scan_result)
                     @dump($scan_result)
+                @else
+                    <div class="bg-red-900/10 border border-red-900/30 p-4 rounded-lg text-red-400 text-xs">
+                        <strong>Error Message:</strong><br>
+                        <pre class="mt-2 overflow-x-auto">{{ $scan_error }}</pre>
+                    </div>
+                @endif
+            </section>
+
+            <section>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-indigo-400">3. CVE Scan Result ({{ $scanned_url }})</h2>
+                    @if($cve_result)
+                        <span class="text-[10px] bg-green-900/30 text-green-400 px-2 py-1 rounded border border-green-800 uppercase">Success</span>
+                    @else
+                        <span class="text-[10px] bg-red-900/30 text-red-400 px-2 py-1 rounded border border-red-800 uppercase">Failed</span>
+                    @endif
+                </div>
+
+                @if($cve_result)
+                    @dump($cve_result)
                 @else
                     <div class="bg-red-900/10 border border-red-900/30 p-4 rounded-lg text-red-400 text-xs">
                         <strong>Error Message:</strong><br>

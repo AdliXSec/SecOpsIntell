@@ -164,6 +164,19 @@ class IPGeo extends Controller
                 'ip' => $ip_address,
             ]);
 
+        $endDate = Carbon::now()->setTimezone('UTC');
+        $startDate = Carbon::now()->setTimezone('UTC')->subDays(7);
+        $cve_response = Http::timeout(30)
+            ->retry(3, 100)
+            ->withOptions([
+                'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
+            ])
+            ->get('https://services.nvd.nist.gov/rest/json/cves/2.0', [
+                'pubStartDate' => $startDate->format('Y-m-d\TH:i:s.000'),
+                'pubEndDate' => $endDate->format('Y-m-d\TH:i:s.000'),
+                'resultsPerPage' => 50
+            ]);
+
         $submit_response = Http::timeout(30)->retry(3, 100)
             ->withOptions(['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]])
             ->asForm()->withHeaders([
@@ -195,6 +208,15 @@ class IPGeo extends Controller
                         'headers' => ['x-apikey' => $scan_api]
                     ]);
                     $scan_data = $analysis_response->json();
+                    if ($cve_response->successful()) {
+                        $data = $cve_response->json();
+
+                        if (isset($data['vulnerabilities'])) {
+                            $vulnerabilities = array_reverse($data['vulnerabilities']);
+                            $data['vulnerabilities'] = array_slice($vulnerabilities, 0, 30);
+                        }
+
+                    }
                 }
             } else {
                 $scan_error = 'VirusTotal Detail Error: ' . $analysis_response->body();
@@ -209,7 +231,9 @@ class IPGeo extends Controller
             'scan_result' => $scan_data,
             'scan_error' => $scan_error,
             'scanned_url' => $url_to_scan,
-            'scanned_ip' => $ip_address
+            'scanned_ip' => $ip_address,
+            'cve_result' => array_slice(array_reverse($cve_response->json()['vulnerabilities']), 0, 30),
+            'cve_error' => !$cve_response->successful() ? $cve_response->body() : null
         ]);
     }
 }
