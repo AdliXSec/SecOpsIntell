@@ -14,7 +14,7 @@
 <br>
 
 <div align="center">
-  <table>
+  <table border="0">
     <tr>
       <td><img src="public/assets/ipgeo.png" alt="IP Geo" width="400"></td>
       <td><img src="public/assets/cvescan.png" alt="CVE Search" width="400"></td>
