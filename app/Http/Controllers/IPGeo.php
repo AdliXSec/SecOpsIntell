@@ -23,7 +23,7 @@ class IPGeo extends Controller
             ->withOptions([
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
             ])
-            ->get('https://api.ipgeolocation.io/ipgeo', [
+            ->get('https://api.ipgeolocation.io/v3/ipgeo', [
                 'apiKey' => $api_key,
                 'ip' => $ip_address,
             ]);
@@ -291,7 +291,7 @@ class IPGeo extends Controller
 
         $ip_response = Http::timeout(30)->retry(3, 500)
             ->withOptions(['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]])
-            ->get('https://api.ipgeolocation.io/ipgeo', [
+            ->get('https://api.ipgeolocation.io/v3/ipgeo', [
                 'apiKey' => $geoip_key,
                 'ip' => $ip_address,
             ]);
