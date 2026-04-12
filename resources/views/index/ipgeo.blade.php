@@ -8,12 +8,17 @@
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- UI Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Markdown & Syntax Highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
     <!-- Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -23,7 +28,10 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
                     colors: {
                         brand: {
                             500: '#6366f1',
@@ -71,10 +79,21 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+
+        /* Markdown Styling for AI Answers */
+        .prose-ai h1, .prose-ai h2, .prose-ai h3 { color: white; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .prose-ai h1 { font-size: 1.5rem; }
+        .prose-ai h2 { font-size: 1.25rem; }
+        .prose-ai p { color: #a1a1aa; line-height: 1.6; margin-bottom: 1rem; font-size: 14px; }
+        .prose-ai ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; color: #a1a1aa; }
+        .prose-ai li { margin-bottom: 0.5rem; }
+        .prose-ai code { background: #27272a; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: 'JetBrains Mono'; font-size: 0.85em; color: #e5e7eb; }
+        .prose-ai pre { background: #09090b; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin-bottom: 1rem; border: 1px solid #27272a; }
+        .prose-ai pre code { background: transparent; padding: 0; color: inherit; font-size: 13px; }
     </style>
 </head>
 <body class="text-slate-200 font-sans antialiased selection:bg-brand-500/30 overflow-x-hidden"
-      x-data="{ tab: '{{ isset($cve_result) || isset($error_cve) ? 'cve' : (isset($scan_result) || isset($error_scan) ? 'scan' : 'ip') }}' }">
+      x-data="{ tab: '{{ isset($ai_result) || isset($error_ai) ? 'ai' : (isset($cve_result) || isset($error_cve) ? 'cve' : (isset($scan_result) || isset($error_scan) ? 'scan' : 'ip')) }}' }">
 
     <!-- Navigation -->
     <nav class="sticky top-0 z-50 w-full border-b border-studio-border bg-studio-bg/80 backdrop-blur-md">
@@ -101,6 +120,12 @@
                         :class="tab === 'cve' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'"
                         class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all">
                     CVE Ops
+                </button>
+                <button @click="tab = 'ai'"
+                        :class="tab === 'ai' ? 'bg-brand-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'"
+                        class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-3 h-3"></i>
+                    AI Insight
                 </button>
             </div>
 
@@ -527,6 +552,102 @@
                     @endforelse
                 </div>
             @endisset
+        </div>
+
+        <!-- AI Insight Section -->
+        <div x-show="tab === 'ai'" x-transition:enter="transition duration-300 translate-y-2" x-cloak class="space-y-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 class="text-4xl font-black text-white tracking-tighter mb-2">SecOps Expert AI</h1>
+                    <p class="text-studio-muted text-sm max-w-md">Konsultasikan temuan keamanan Anda dengan {{ isset($ai_result) ? $ai_result['model'] : 'AI' }} Security Specialist.</p>
+                </div>
+                <div class="studio-card p-1.5 rounded-2xl w-full md:w-[500px] shadow-2xl">
+                    <form action="{{ route('askai') }}" method="POST" class="flex gap-2">
+                        @csrf
+                        <input type="text" name="question" value="{{ $last_question ?? '' }}" placeholder="Tanyakan seputar keamanan siber..." required
+                               class="flex-1 bg-transparent border-none text-sm text-white px-4 focus:ring-0">
+                        <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl transition shadow-lg flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                            Analyze <i data-lucide="send" class="w-3 h-3"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            @if(isset($error_ai))
+                <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-5 rounded-2xl text-sm flex items-center">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 mr-3"></i>
+                    {{ $error_ai }}
+                </div>
+            @endif
+
+            @isset($ai_result)
+                @php
+                    $message = $ai_result['choices'][0]['message'];
+                    $content = $message['content'];
+                    $reasoning = $message['reasoning'] ?? null;
+                @endphp
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Reasoning Column (DeepSeek Logic) -->
+                    @if($reasoning)
+                    <div class="lg:col-span-4 space-y-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="brain-circuit" class="w-4 h-4 text-brand-500"></i>
+                            <span class="text-[10px] font-black text-brand-500 uppercase tracking-[0.2em]">AI Reasoning Logic</span>
+                        </div>
+                        <div class="studio-card p-6 rounded-[2rem] bg-brand-500/[0.02] border-brand-500/10">
+                            <div class="text-[12px] text-zinc-500 leading-relaxed font-mono italic">
+                                {{ $reasoning }}
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Main Answer Column -->
+                    <div class="{{ $reasoning ? 'lg:col-span-8' : 'lg:col-span-12' }} space-y-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="message-square" class="w-4 h-4 text-white"></i>
+                            <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Expert Analysis</span>
+                        </div>
+                        <div class="studio-card p-10 rounded-[2.5rem] relative overflow-hidden">
+                            <div class="prose-ai max-w-none" id="ai-content">
+                                <!-- Content will be rendered by Marked.js -->
+                                <textarea id="raw-content" class="hidden">{{ $content }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center px-6 text-studio-muted">
+                            <div class="flex items-center gap-4">
+                                <span class="text-[10px] font-bold uppercase tracking-widest">Model: {{ $ai_result['model'] }}</span>
+                            </div>
+                            <span class="text-[10px] font-bold uppercase tracking-widest">Tokens: {{ $ai_result['usage']['total_tokens'] }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const rawContent = document.getElementById('raw-content').value;
+                        const target = document.getElementById('ai-content');
+                        target.innerHTML = marked.parse(rawContent);
+
+                        // Highlight code blocks
+                        target.querySelectorAll('pre code').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
+                    });
+                </script>
+            @endisset
+
+            @unless(isset($ai_result))
+                <div class="studio-card p-20 rounded-[3rem] text-center bg-gradient-to-b from-white/[0.01] to-transparent">
+                    <div class="w-16 h-16 bg-brand-600/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="sparkles" class="w-8 h-8 text-brand-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2 tracking-tight">Belum Ada Analisis</h3>
+                    <p class="text-studio-muted text-sm max-w-sm mx-auto">Gunakan kolom pencarian di atas untuk bertanya seputar keamanan siber kepada AI Expert kami.</p>
+                </div>
+            @endunless
         </div>
 
     </main>

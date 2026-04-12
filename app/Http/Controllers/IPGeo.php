@@ -149,6 +149,138 @@ class IPGeo extends Controller
         ]);
     }
 
+    public function askAI(Request $request)
+    {
+        set_time_limit(240); // Perpanjang batas waktu eksekusi PHP menjadi 4 menit
+        $question = $request->input('question');
+        $apiKey = env('OPENROUTER_API_KEY');
+
+        if (!$apiKey) {
+            return view('index.ipgeo', [
+                'error_ai' => 'API Key OpenRouter belum dikonfigurasi di .env'
+            ]);
+        }
+
+        try {
+            $response = Http::timeout(240) // Perpanjang timeout HTTP menjadi 240 detik
+                ->withOptions([
+                    'connect_timeout' => 20,
+                    'curl' => [
+                        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4
+                    ]
+                ])
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ])->post('https://openrouter.ai/api/v1/chat/completions', [
+                        'model' => 'deepseek/deepseek-v3.2',
+                        'messages' => [
+                            [
+                                'role' => 'system',
+                                'content' => 'Anda adalah SecOps Expert AI. Berikan jawaban yang teknis, mendalam, dan terstruktur. Gunakan format Markdown untuk jawaban Anda.'
+                            ],
+                            [
+                                'role' => 'user',
+                                'content' => $question
+                            ]
+                        ],
+                        'reasoning' => [
+                            'enabled' => true
+                        ]
+                    ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return view('index.ipgeo', [
+                    'ai_result' => $data,
+                    'last_question' => $question
+                ]);
+            }
+
+            return view('index.ipgeo', [
+                'error_ai' => 'AI Error: ' . ($response->json()['error']['message'] ?? 'Unknown Error')
+            ]);
+
+        } catch (\Exception $e) {
+            return view('index.ipgeo', [
+                'error_ai' => 'Gagal terhubung ke AI: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function askGemini(Request $request)
+    {
+        set_time_limit(120);
+        $question = $request->input('question');
+        $apiKey = env('GEMINI_API_KEY');
+
+        if (!$apiKey) {
+            return view('index.ipgeo', [
+                'error_ai' => 'API Key Gemini belum dikonfigurasi di .env'
+            ]);
+        }
+
+        try {
+            $response = Http::timeout(120)
+                ->withOptions([
+                    'connect_timeout' => 20,
+                    'curl' => [
+                        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4
+                    ]
+                ])
+                ->withHeaders([
+                    'x-goog-api-key' => $apiKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => 'System: Anda adalah SecOps Expert AI. Berikan jawaban yang teknis, mendalam, dan terstruktur. Gunakan format Markdown untuk jawaban Anda.'],
+                                ['text' => 'User: ' . $question]
+                            ]
+                        ]
+                    ]
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $content = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'Tidak ada jawaban dari Gemini.';
+
+                $ai_result = [
+                    'choices' => [
+                        [
+                            'message' => [
+                                'content' => $content,
+                                'reasoning' => null
+                            ]
+                        ]
+                    ],
+                    'model' => 'Gemini 2.5 Flash',
+                    'usage' => [
+                        'total_tokens' => $data['usageMetadata']['totalTokenCount'] ?? 0
+                    ]
+                ];
+
+                return view('index.ipgeo', [
+                    'ai_result' => $ai_result,
+                    'last_question' => $question
+                ]);
+            }
+
+            $errorMessage = $response->json()['error']['message'] ?? 'Unknown API Error';
+            return view('index.ipgeo', [
+                'error_ai' => 'Gemini Error: ' . $errorMessage
+            ]);
+
+        } catch (\Exception $e) {
+            $safeError = str_replace($apiKey, 'HIDDEN', $e->getMessage());
+            return view('index.ipgeo', [
+                'error_ai' => 'Gagal terhubung ke Gemini: ' . $safeError
+            ]);
+        }
+    }
+
     public function dumptest()
     {
         $url_to_scan = 'http://evil.com';

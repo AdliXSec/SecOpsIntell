@@ -7,8 +7,8 @@
 ## Screenshots
 
 <div align="center">
-  <img src="public/assets/urlscan.png" alt="Main Dashboard" width="800">
-  <p style="font-weight: bold;">Tampilan Fitur URL Scan</p>
+  <img src="public/assets/ai.png" alt="Main Dashboard" width="800">
+  <p style="font-weight: bold;">Tampilan Fitur AI Security</p>
 </div>
 
 <br>
@@ -24,6 +24,13 @@
       <td align="center"><b>NVD CVE Database</b></td>
     </tr>
   </table>
+</div>
+
+<br>
+
+<div align="center">
+  <img src="public/assets/urlscan.png" alt="Main Dashboard" width="800">
+  <p style="font-weight: bold;">Tampilan Fitur URL Scan</p>
 </div>
 
 ---
@@ -58,6 +65,10 @@ Terhubung langsung dengan database **NVD (National Vulnerability Database)** dar
 - **Filter by Severity**: Menampilkan daftar kerentanan terbaru berdasarkan tingkat bahaya: `LOW`, `MEDIUM`, `HIGH`, dan `CRITICAL`.
 - **Auto-Discovery**: Secara otomatis menampilkan 30 kerentanan terbaru yang diterbitkan dalam 7 hari terakhir jika tidak ada input pencarian.
 
+### 4. **Expert AI Security**
+
+Menggunakan beberapa model AI dari Deepseek hingga Gemini yang di khususkan untuk mengetahui tentang audit keamanan sistem
+
 ---
 
 ## Alur Kerja Aplikasi (Application Flow)
@@ -87,6 +98,7 @@ Aplikasi beroperasi dengan alur kerja sebagai berikut:
     - [VIRUS TOTAL](https://www.virustotal.com/gui/home/upload) (Virus Total API)
     - [NVD NIST API](https://nvd.nist.gov/developers/v2) (Vulnerability Data)
     - [IP-API](https://api.ipgeolocation.io/ipgeo) (Geolocation Data)
+    - [AI-API](https://aistudio.google.com/) (AI API Security Audit)
 - **Library**: GuzzleHttp / Laravel HTTP Client, Carbon (Time Manipulation)
 
 ---
