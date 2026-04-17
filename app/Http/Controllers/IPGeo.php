@@ -41,12 +41,13 @@ class IPGeo extends Controller
 
     public function scan(Request $request)
     {
+        set_time_limit(150); // Beri waktu ekstra untuk proses scan yang butuh dua tahap
         $url_to_scan = $request->input('url');
         $api_key = env('VIRUSTOTAL_API_KEY', '');
 
-        $submit_response = Http::timeout(30)
-            ->retry(3, 500)
+        $submit_response = Http::timeout(60)
             ->withOptions([
+                'connect_timeout' => 20,
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
             ])
             ->asForm()
@@ -65,11 +66,11 @@ class IPGeo extends Controller
 
         $analysis_id = $submit_response->json('data.id');
 
-        sleep(3);
+        sleep(5); // Tunggu sebentar agar analisis selesai di sisi server
 
-        $analysis_response = Http::timeout(30)
-            ->retry(3, 500)
+        $analysis_response = Http::timeout(60)
             ->withOptions([
+                'connect_timeout' => 20,
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
             ])
             ->withHeaders([
@@ -81,8 +82,10 @@ class IPGeo extends Controller
             $data = $analysis_response->json('data');
 
             if ($data['attributes']['status'] !== 'completed') {
-                sleep(2);
-                $analysis_response = Http::timeout(30)->withHeaders(['x-apikey' => $api_key])
+                sleep(3);
+                $analysis_response = Http::timeout(60)
+                    ->withOptions(['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]])
+                    ->withHeaders(['x-apikey' => $api_key])
                     ->get('https://www.virustotal.com/api/v3/analyses/' . $analysis_id);
                 $data = $analysis_response->json('data');
             }
@@ -100,6 +103,7 @@ class IPGeo extends Controller
 
     public function cve(Request $request)
     {
+        set_time_limit(120); // Perpanjang waktu eksekusi agar tidak timeout
         $cve_id = $request->input('cve_id');
         $url = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
         $params = [];
@@ -108,6 +112,7 @@ class IPGeo extends Controller
             $upper_cve_id = strtoupper($cve_id);
             if (in_array($upper_cve_id, ['HIGH', 'MEDIUM', 'LOW', 'CRITICAL'])) {
                 $params['cvssV3Severity'] = $upper_cve_id;
+                $params['resultsPerPage'] = 50; // Batasi jumlah data dari server agar cepat
             } else {
                 $params['cveId'] = $cve_id;
             }
@@ -121,7 +126,7 @@ class IPGeo extends Controller
             $params['resultsPerPage'] = 50;
         }
 
-        $response = Http::timeout(30)
+        $response = Http::timeout(100) // Beri napas panjang untuk HTTP request
             ->retry(3, 500)
             ->withOptions([
                 'curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]
@@ -232,7 +237,7 @@ class IPGeo extends Controller
                     'x-goog-api-key' => $apiKey,
                     'Content-Type' => 'application/json',
                 ])
-                ->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', [
+                ->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', [
                     'contents' => [
                         [
                             'parts' => [
